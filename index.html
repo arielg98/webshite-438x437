@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head> </head>
+  <body>
+    <img
+      id="currentImage"
+      style="object-fit: scale-down"
+      width="438px"
+      height="438px"
+    />
+    <script>
+      var images = [];
+      var frequendyByday = 1;
+      /// Get the image from the list
+      function getImage() {
+        index = getIndex();
+        return images[index % images.length];
+      }
+      ///
+      gindex = 0;
+      function getIndex(useIned = true) {
+        // if (useIned) return gindex++ % images.length;
+        var t = new Date();
+        var timeStep = (24 * 3600) / frequendyByday / images.length;
+        var daySec =
+          t.getUTCHours() * 3600 + t.getUTCMinutes() * 60 + t.getUTCSeconds();
+        var index = Math.floor(daySec / timeStep);
+        index = index % images.length;
+        gindex = index;
+        return index;
+      }
+      var taskRunnig = false;
+      function fetchImages(albums = ["wVAQB7b", "DwBQPDJ"]) {
+        // select universal day number
+        // if even take album one else take album to
+        var selectDate =
+          Math.floor(
+            (new Date().getTime() / 1000 / 60 +
+              new Date().getTimezoneOffset()) /
+              60 /
+              24
+          ) %
+            2 ==
+          0
+            ? 1
+            : 0;
+        // Default options are marked with *
+
+        var album = albums[selectDate];
+        const response = fetch("https://api.imgur.com/3/album/" + album, {
+          mode: "cors",
+          cache: "no-cache",
+
+          headers: {
+            Authorization: "Client-ID b4579cfe307272b",
+          },
+          redirect: "follow",
+          referrerPolicy: "no-referrer",
+        }).then(function (response) {
+          response.json().then(function (json) {
+            images = json.data.images.map(function (k) {
+              return k.link;
+            });
+
+            if (!taskRunnig) {
+              taskRunnig = true;
+              loadImage();
+            }
+            // refresh the image list every 60 second
+            setTimeout(fetchImages, 60000);
+          });
+        });
+      }
+      ///
+      function loadImage() {
+        var img = (image = getImage());
+        if (img != null && document.getElementById("currentImage").src != img)
+          document.getElementById("currentImage").src = img;
+        setTimeout(loadImage, 1000);
+      }
+      fetchImages();
+    </script>
+  </body>
+</html>
